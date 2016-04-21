@@ -285,8 +285,45 @@ The \pood refactoring converts OpenACC directives to OpenMP 4.0 directives.
 \item OpenACC directives in source code supported by our transformation tool.
 \end{itemize}  
 
-\textbf{Mechanism:} 
-\subsection{Algorithm}
+\textbf{Mechanism:} The refactoring introduces OpenMP directives that correspond to OpenACC directives.
+
+POOD first determines all the preprocessor include statements and check whether there is any ``openacc.h". If openacc header presents POOD removes it.\todo{need to remove openacc functions}. From the precondition checking we have the OpenACC preprocessor pragma statements that we want to transform. For each directives Abstract Syntax Tree gives the exact position. POOD removes the existing pragma statment and inserts OpenMP directives on that position based on the directive clause. Table \ref{table:1} lists the OpenACC and corresponding OpenMP clauses that POOD transforms. For any OpenACC data directives with copy, copyin, or copyout clause POOD performs NameBinding analyses\todo{fix} for the variables to find out their declaration. If these variables are declared globally then POOD changes them to local. When all the transformations have completed, POOD writes the changes to file.
+
+
+\begin{table}[t]
+	\begin{minipage}{0.47\textwidth}
+%\small
+\caption{Equivqlent OpenACC and OpenMP clause}
+\centering
+\begin{tabular}{ | l@{\hspace{0.1cm}}|  @{\hspace{0.4cm}}r@{\hspace{0.1cm}}|} 
+ \hline
+ \hspace*{0.4cm} OpenACC Clause & OpenMP Clause\hspace*{0.6cm}\\
+ \hspace*{0.5cm} (\#pragma acc)%\footnote{The ID is used to refer to each application in the rest of the paper.} 
+  & (\#pragma omp)\hspace*{0.6cm} \\
+ \hline
+ data & target data \\ 
+ copy(A[0:n*n]) & map(tofrom:A[0:n*n]) \\
+ copyin(A[0:n*n]) & map(to:A[0:n*n]) \\
+ copyout(A[0:n*n]) & map(from:A[0:n*n]) \\
+ create(A[0:n*n]) & map(to:A[0:n*n]) \\ 
+ parallel & target/teams \\ 
+ parallel loop private(t1,t2) & parallel for private(t1,t2) \\
+ loop & for \\
+ loop private(tmp) & for private(tmp) \\
+ loop reduction(+:t1,t2) & for reduction(+:t1,t2) \\
+ loop independent & for independent \\
+ parallel loop & target/teams/distribute \\
+ \hline
+\end{tabular}
+
+\label{table:1}
+\end{minipage}
+\end{table}
+%\normalsize
+
+
+\textbf{Example:}
+
 \todo{0.5 page - description of the conversion algorithm (what clauses translate to what?) - Nawrin/Dr.Overbey} 
 \section{Evaluation}
 \todo{1 page including tables - evaluation: what code did we test it on; how many lines changed; what performance numbers did we get - Nawrin}
