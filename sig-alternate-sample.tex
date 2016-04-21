@@ -321,6 +321,63 @@ POOD first determines all the preprocessor include statements and check whether 
 \end{table}
 %\normalsize
 
+\begin{figure}
+\begin{tabular}{rcl}
+\textit{acc-directive} &$\rightarrow$& \texttt{\#pragma acc data\ }\textit{data-clauses} \\
+                       &     $|$     & \texttt{\#pragma acc parallel loop} \\
+                       &     $|$     & \texttt{\#pragma acc parallel} \\
+                       &     $|$     & \texttt{\#pragma acc loop\ }\textit{loop-clauses} \\
+\textit{data-clause}   &$\rightarrow$& \texttt{copyin(}\textit{vars}\texttt{)} \\
+                       &     $|$     & \texttt{copyout(}\textit{vars}\texttt{)} \\
+                       &     $|$     & \texttt{create(}\textit{vars}\texttt{)} \\
+\textit{loop-clause}   &$\rightarrow$& \texttt{independent} \\
+                       &     $|$     & \texttt{private(}\textit{vars}\texttt{)} \\
+                       &     $|$     & \texttt{reduction(}\textit{reductions}\texttt{)} \\
+\end{tabular}
+\caption{OpenACC subset grammar accepted by the translation tool.  The syntax
+of \textit{vars} and \textit{reductions} is omitted.  The nonterminals
+\textit{data-clauses} and \textit{loop-clauses} correspond to sequences of zero
+or more phrases derived from \textit{data-clause} and \textit{loop-clause},
+respectively.}
+\label{fig:grammar}
+\end{figure}
+
+\newcommand{\translate}[1]{\ensuremath{\mathcal{T}[\![ #1 ]\!]}}
+\begin{figure*}
+\begin{align*}
+%
+\translate{\texttt{\#pragma acc data\ }\textit{data-clauses}} &=
+   \texttt{\#pragma omp target data } \translate{\textit{data-clauses}} \\
+%
+\translate{\texttt{copyin(}\textit{vars}\texttt{)}} &=
+   \texttt{map(to:}\textit{vars}\texttt{)} \\
+%
+\translate{\texttt{copyout(}\textit{vars}\texttt{)}} &=
+   \texttt{map(from:}\textit{vars}\texttt{)} \\
+%
+\translate{\texttt{create(}\textit{vars}\texttt{)}} &=
+   \texttt{map(alloc:}\textit{vars}\texttt{)} \\
+%
+\translate{\texttt{\#pragma acc parallel loop}} &=
+   \left\{\parbox{2in}{%
+   \texttt{\#pragma omp target} \\
+   \texttt{\#pragma omp teams} \\
+   \texttt{\#pragma omp distribute}}\right. \\
+%
+\translate{\texttt{\#pragma acc parallel}} &= %\textit{parallel-clauses}} &=
+   \left\{\parbox{2in}{%
+   \texttt{\#pragma omp target} \\
+   \texttt{\#pragma omp teams}}\right. \\
+%
+\translate{\texttt{\#pragma acc loop\ }\textit{loop-clauses}} &=
+   \texttt{\#pragma omp parallel for\ }\textit{loop-clauses} \\
+%
+\end{align*}
+\caption{Translation rules from OpenACC to OpenMP~4.  The function
+$\mathcal{T}$ maps an OpenACC directive to a sequence of one or more OpenMP
+directives.}
+\label{fig:rules}
+\end{figure*}
 
 \textbf{Example:}
 
