@@ -268,6 +268,315 @@ email: {\texttt{jsmith@affiliation.org}}) and Julius P.~Kumquat
 \todo{1 page including screenshot(s) - description of our tool: what directives it handles, how it works, where to get it - Nawrin}
 The major compilers supporting OpenACC are Portland Group (PGI), Cray, and CAPS. On the other hand, Intel has decided not to support OpenACC until accelerators are fully integrated into OpenMP. We describe an automated approach to assist programmers in converting OpenACC to OpenMP, so that same syntax could be used for both Cray and Intel compiler while maintaining the performance. We describe a refactoring (POOD) for this purpose.
 
+\subsection{A Subset of OpenACC}
+For the purposes of prototyping, we designed our tool to accept the subset of
+OpenACC described by the grammar in Figure~\ref{fig:grammar}.  This includes
+all of the directives and clauses used by the EPCC Benchmarks, as well as the
+other example programs in our test suite.  While it omits some important
+features---asynchronous execution, unstructured data lifetimes, etc.---it does
+correspond to a useful, commonly-used subset of OpenACC.
+
+\begin{figure}
+\begin{tabular}{rcl}
+\textit{acc-directive} &$\rightarrow$& \texttt{\#pragma acc data\ }\textit{data-clauses} \\
+                       &     $|$     & \texttt{\#pragma acc parallel}\texttt{\ }\textit{parallel-clauses} \\
+                       &     $|$     & \texttt{\#pragma acc loop\ }\textit{type}\texttt{\ }\textit{loop-clauses} \\
+\textit{type}          &$\rightarrow$& \texttt{gang} \\
+                       &     $|$     & \texttt{vector} \\
+                       &     $|$     & \texttt{seq} \\
+                       &     $|$     & $\epsilon$ \\
+\textit{data-clause}   &$\rightarrow$& \texttt{copyin(}\textit{vars}\texttt{)} \\
+                       &     $|$     & \texttt{copyout(}\textit{vars}\texttt{)} \\
+                       &     $|$     & \texttt{copy(}\textit{vars}\texttt{)} \\
+                       &     $|$     & \texttt{create(}\textit{vars}\texttt{)} \\
+\textit{parallel-clause}&$\rightarrow$&\texttt{num\_gangs(}\textit{n}\texttt{)} \\
+                       &     $|$     & \texttt{vector\_length(}\textit{n}\texttt{)} \\
+                       &     $|$     & \texttt{private(}\textit{vars}\texttt{)} \\
+                       &     $|$     & \texttt{reduction(}\textit{reductions}\texttt{)} \\
+\textit{loop-clause}   &$\rightarrow$& \texttt{independent} \\
+                       &     $|$     & \texttt{private(}\textit{vars}\texttt{)} \\
+\end{tabular}
+\caption{OpenACC subset grammar accepted by the translation tool.  Syntax is
+omitted for \textit{vars}, \textit{reductions}, and integers \textit{n}.  The
+nonterminals \textit{data-clauses} and \textit{loop-clauses} correspond to
+sequences of zero or more phrases derived from \textit{data-clause} and
+\textit{loop-clause}, respectively.  In addition to the directives shown,
+\texttt{\#pragma acc parallel loop} is supported, and treated as syntactic
+sugar for a \texttt{loop} directive nested directly under a \texttt{parallel}
+directive.}
+\label{fig:grammar}
+\end{figure}
+
+\subsection{Considerations in Translation}
+In theory, the goals of the present paper are modest: We are interested in
+translating a subset of OpenACC (Figure~\ref{fig:grammar}) to OpenMP~4,
+targeting the same accelerator devices (NVIDIA GPUs).  In theory, the two APIs
+are very closely aligned, and the translation should be straightforward.
+
+In practice, the situation is not so simple.  The OpenACC and OpenMP
+specifications define an \emph{abstract} execution model.  They do not dictate
+how that model is mapped to specific hardware devices.  This is left to the
+compiler.  Our OpenACC programs were compiled using PGCC~16.1, the standard
+commercial compiler for OpenACC\@.  We compiled OpenMP~4 using a custom build
+of Clang~3.8\footnote{See \url{https://parallel-computing.pro/index.php/9-cuda/43-openmp-4-0-on-nvidia-cuda-gpus}} (PGCC does not yet support
+OpenMP~4\footnote{Cray's compilers support both, but there are currently no
+Cray resources in the XSEDE ecosystem.}).  As we will show, directives that
+appear similar may be translated quite differently by the two compilers.
+
+\subsubsection{Work Distribution Differs}
+
+\begin{figure*}
+\begin{center}
+\begin{minipage}{4in}
+{\footnotesize
+\begin{verbatim}
+#pragma acc data copyin(A[0:N], B[0:N]), copyout(C[0:N])
+#pragma omp target data map(to:A[0:N], B[0:N]), map(from:C[0:N])
+{
+    #pragma acc parallel loop
+    #pragma omp target teams distribute parallel for
+    for (int i = 0; i < N; ++i)
+    {
+        C[i] = A[i] + B[i];
+    }
+}
+\end{verbatim}
+}
+\end{minipage}
+\end{center}
+\caption{Vector addition}
+\label{fig:vecadd}
+\end{figure*}
+
+Perhaps the simplest example of directive-based accelerator code is the vector
+addition kernel shown in Figure~\ref{fig:vecadd}.  It adds two vectors $A$ and
+$B$ on an accelerator device, storing the sum in $C$.  While the directives
+direct the compiler to parallelize the loop on the accelerator, the compiler
+can decide (in this case) how to divide the loop iterations among threads
+and thread blocks on the CUDA device.  When $N = 10000$:
+\begin{itemize}
+\item PGCC generates a grid of 79 thread blocks with 128 threads per block;
+kernel execution time is about $3~\mu s$ on a Tesla~K40.
+\item Clang generates a grid of 15 thread blocks with 1024 threads per block;
+kernel execution time is about $30~\mu s$ on a Tesla~K40.\footnote{Adding
+\texttt{num\_teams(79) thread\_limit(128)} to the OpenMP code (to match the
+grid and block dimensions of the OpenACC code) actually increases the kernel
+execution time to about $80~\mu s$.
+%Adding \texttt{num\_gangs(15) vector\_length(1024)} to the OpenACC code does
+%not change the performance significantly.
+}
+\end{itemize}
+
+It is also worth noting that PGCC generates code where all threads are active
+in all thread blocks except the last (presumably to minimize control
+divergence).  Clang generates code that assigns an approximately equal number
+of threads to each thread block, so inactive threads may be present in
+several blocks.
+
+\begin{figure*}
+\begin{minipage}{.5\textwidth}
+{\footnotesize
+\begin{verbatim}
+// OpenACC
+#pragma acc parallel loop
+for (int i = 0; i < 10; i++) {      // Gang
+    for (int j = 0; j < 10; j++) {  // Vector
+        ...
+    }
+}
+
+\end{verbatim}
+}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+{\footnotesize
+\begin{verbatim}
+// OpenMP 4 Device Directives
+#pragma omp target teams distribute
+for (int i = 0; i < 10; i++) {
+    #pragma omp parallel for
+    for (int j = 0; j < 10; j++) {
+        ...
+    }
+}
+\end{verbatim}
+}
+\end{minipage}
+\caption{Doubly nested loops.}
+\label{fig:nest}
+\end{figure*}
+
+More important is the handling of loop nests, such as the simple
+doubly nested loops in Figure~\ref{fig:nest}.
+
+In OpenACC, the compiler has some freedom to decide how to parallelize the loop
+nest.  PGCC will typically run the outermost loop as a gang loop and the
+innermost loop as a vector loop.  Given the OpenACC code in
+Figure~\ref{fig:nest}, the compiler does exactly this: the iterations of the
+$i$-loop are divided among the thread blocks, and the iterations of the
+$j$-loop are divided among the threads within each block.
+
+In OpenMP, work distribution is not so automatic.  Consider these
+``obvious'' but incorrect translations of the OpenACC code into OpenMP: The
+\texttt{\#pragma acc parallel loop} directive could be replaced by
+\begin{itemize}
+\item \texttt{\#pragma omp target teams}.  In this case, the entire loop
+nest would be run redundantly by all thread blocks.
+\item \texttt{\#pragma omp target teams distribute}.  In this case, the
+iterations of the $i$-loop would be divided among thread blocks, but only
+one thread would be active within each block.
+\item \texttt{\#pragma omp target teams distribute parallel for}.  Here,
+the iterations of the $i$-loop are distributed among threads and thread blocks.
+\end{itemize}
+In all three cases, \emph{the inner $j$-loop runs sequentially}, because the
+parallelization directive is applied to only one loop.  OpenMP requires the
+programmer to explicitly specify how to run each loop in the nest.  The
+translation most similar to the OpenACC code is shown on the right in
+Figure~\ref{fig:nest}: The iterations of the $i$-loop are divided among thread
+blocks using the \texttt{distribute} directive, and the iterations of the
+$j$-loop are divided among threads in the block using the \texttt{parallel for}
+directive.
+
+%\subsubsection{Intrinsics Differ}
+
+%\subsubsection{Reductions Differ}
+
+\subsubsection{Data Transfer May Differ}
+
+In both OpenACC and OpenMP, if \texttt{data}/\texttt{target data} directives
+are omitted, the compiler will automatically determine what data needs to be
+transferred between the host and the accelerator.  This is another case where
+compilers may differ.  In the vector addition example
+(Figure~\ref{fig:vecadd}), consider what happens when $A$, $B$, and $C$ are
+\emph{pointers} allocated just before the kernel (in the same function) using
+\textit{malloc}.  With PGCC, the \texttt{\#pragma acc data} directive can be
+omitted; it can determine statically that 10,000 elements of $A$, $B$, and
+$C$ are accessed and thus need to be copied.  With Clang, if the
+\texttt{\#pragma omp target data} directive is omitted, the kernel crashes at
+runtime (\emph{Device Illegal Address}).
+
+\subsection{Translation Algorithm}
+
+\newcommand{\translate}[1]{\ensuremath{\mathcal{T}[\![ #1 ]\!]}}
+\begin{figure*}
+\begin{align*}
+%
+\translate{\texttt{\#pragma acc data\ }\textit{data-clauses}} &=
+   \texttt{\#pragma omp target data } \translate{\textit{data-clauses}} \\
+%
+\translate{\texttt{copyin(}\textit{vars}\texttt{)}} &=
+   \texttt{map(to:}\textit{vars}\texttt{)} \\
+%
+\translate{\texttt{copyout(}\textit{vars}\texttt{)}} &=
+   \texttt{map(from:}\textit{vars}\texttt{)} \\
+%
+\translate{\texttt{copy(}\textit{vars}\texttt{)}} &=
+   \texttt{map(tofrom:}\textit{vars}\texttt{)} \\
+%
+\translate{\texttt{create(}\textit{vars}\texttt{)}} &=
+   \texttt{map(alloc:}\textit{vars}\texttt{)} \\
+%
+\translate{\texttt{\#pragma acc parallel\ }\textit{parallel-clauses}} &=
+   \left.\parbox[t]{4in}{%
+   \texttt{\#pragma omp target teams\ }\translate{\textit{parallel-clauses}}}\right. \\
+%
+\translate{\texttt{num\_gangs(}\textit{n}\texttt{)}} &=
+   \texttt{num\_teams(}\textit{n}\texttt{)} \\
+%
+\translate{\texttt{vector\_length(}\textit{n}\texttt{)}} &=
+   \texttt{thread\_limit(}\textit{n}\texttt{)} \\
+%
+\translate{\texttt{private(}\textit{vars}\texttt{)}} &=
+   \texttt{private(}\textit{vars}\texttt{)} \\
+%
+\translate{\texttt{reduction(}\textit{vars}\texttt{)}} &=
+   \texttt{reduction(}\textit{reductions}\texttt{)} \\
+%
+\translate{\texttt{\#pragma acc loop\ }\textit{type}\texttt{\ }\textit{loop-clauses}} &=
+   \begin{cases}
+   \texttt{\#pragma omp distribute\ }\translate{\textit{loop-clauses}} \\
+        \hspace*{2em} \textup{ if $\textit{type} \neq \texttt{seq}$, and the loop is the outermost} \\
+        \hspace*{3em} \textup{ non-sequential loop in a loop nest} \\
+        \hspace*{3em} \textup{ in a \texttt{parallel} region} \vspace*{.25em} \\
+   \texttt{\#pragma omp parallel for\ }\translate{\textit{loop-clauses}} \\
+        \hspace*{2em} \textup{ if $\textit{type} \neq \texttt{seq}$, and the loop is the innermost} \\
+        \hspace*{3em} \textup{ non-sequential loop in a loop nest} \\
+        \hspace*{3em} \textup{ in a \texttt{parallel} region} \vspace*{.25em} \\
+   \texttt{\#pragma omp distribute parallel for\ }\translate{\textit{loop-clauses}} \\
+        \hspace*{2em} \textup{ if both of the above apply} \vspace*{.33em} \\
+   \epsilon
+        \hspace*{1.65em} \textup{ otherwise} \\
+   \end{cases} \\
+%
+\translate{\texttt{independent}} &=
+   \epsilon \\
+%
+\end{align*}
+\caption{Translation rules from OpenACC to OpenMP~4.  The function
+$\mathcal{T}$ maps phrases derived from the OpenACC subset grammar to
+strings corresponding to one or more OpenMP directives.  Sequences
+(e.g., \textit{parallel-clauses}) are translated elementwise, that is,
+$\translate{t_1\ t_2\ \dots\ t_n} =
+\translate{t_1}\ \translate{t_2}\ \dots\ \translate{t_n}$.}
+\label{fig:rules}
+\end{figure*}
+
+In the previous section, we showed that OpenACC and OpenMP~4 device directives
+handle work distribution differently, and that differences in compilers can
+have significant effects on the performance (and correctness) of code.  This
+means that porting from OpenACC to OpenMP~4 will almost certainly involve
+some manual effort.  Nevertheless, much of the translation is straightforward
+and tedious, which makes it worth automating.
+
+Our tool implements the translation rules in Figure~\ref{fig:rules}.  The
+majority of the translation is straightforward: Each phrase in OpenACC is
+mapped to a corresponding phrase in OpenMP\@.  These translation rules were
+designed with the following objectives:
+\begin{itemize}
+\item \emph{The translation should be straightfoward and consistent.}
+Each OpenACC directive should translate to the same OpenMP directive(s)
+every time, and the translation should mirror the structure of the OpenACC
+code, to the extent possible.
+\item \emph{Automated translation and manual editing should be complementary.}
+The tool should not try to automate too much.  It should not perform loop
+nest optimizations; it should not infer implicit data transfers; it should
+not make any invasive code changes.  The tool should automate the tedious,
+most obvious parts of the translation, in a completely predictable way.
+More sophisticated changes---like performance tuning---should be under the
+control of the programmer.
+\end{itemize}
+
+\subsubsection{Translating Data Directives}
+
+It is important to note that, according to the translation rules in
+Figure~\ref{fig:rules}, \emph{each data directive is translated as-is}.  No
+attempt is made to infer implicit data transfers or array lengths.
+
+\subsubsection{Translating Loop Nests}
+
+OpenACC's \texttt{gang} clause is roughly equivalent to OpenMP's
+\texttt{distribute}---effectively, it distributes work among thread blocks.
+Likewise, OpenACC's \texttt{vector} clause is roughly equivalent to OpenMP's
+\texttt{parallel for} inside a \texttt{teams} region: it distributes work among
+threads within a block.
+
+Unfortunately, translation isn't quite so simple.  OpenACC does not
+\emph{require} the \texttt{gang} and \texttt{vector} clauses to be used, in
+which case the work distribution is determined by the compiler.  OpenACC is
+also surprisingly lax about where the nesting of gang and vector loops.  For
+example, a \texttt{gang} loop may be nested inside a \texttt{vector} loop;
+there is no direct equivalent of this in OpenMP.  Moreover, PGCC may ignore the
+\texttt{gang} and \texttt{vector} directives altogether, e.g., when a gang loop
+appears inside another gang loop, or a vector loop appears outside another
+vector loop.
+
+For these reasons, \emph{the loop-handling rule of Figure~\ref{fig:rules}
+ignores OpenACC's \texttt{gang} and \texttt{vector} clauses}.  Instead, it uses
+a heuristic typical of parallelizing compilers (one that PGCC appears to use,
+in fact): the iterations of the outermost parallelizable loop are partitioned
+among thread blocks, and the iterations of the innermost parallelizable loop
+are partitioned among the CUDA threads within that block.
+
 \subsection{Translation Tool}
 We prototyped the refactoring in a PLDT OpenACC Eclipse plug-in (C analyses and refactorings for OpenACC). Our tool support various data flow analyses, dependence analysis, refactorings, and parser for OpenACC directives. It provides an user interface (UI) for refactorings. Other than UI, it also supports command line interface (CLI), so one can run the refactorings outside Eclipse. 
 
@@ -321,68 +630,14 @@ POOD first determines all the preprocessor include statements and check whether 
 \end{table}
 %\normalsize
 
-\begin{figure}
-\begin{tabular}{rcl}
-\textit{acc-directive} &$\rightarrow$& \texttt{\#pragma acc data\ }\textit{data-clauses} \\
-                       &     $|$     & \texttt{\#pragma acc parallel loop} \\
-                       &     $|$     & \texttt{\#pragma acc parallel} \\
-                       &     $|$     & \texttt{\#pragma acc loop\ }\textit{loop-clauses} \\
-\textit{data-clause}   &$\rightarrow$& \texttt{copyin(}\textit{vars}\texttt{)} \\
-                       &     $|$     & \texttt{copyout(}\textit{vars}\texttt{)} \\
-                       &     $|$     & \texttt{create(}\textit{vars}\texttt{)} \\
-\textit{loop-clause}   &$\rightarrow$& \texttt{independent} \\
-                       &     $|$     & \texttt{private(}\textit{vars}\texttt{)} \\
-                       &     $|$     & \texttt{reduction(}\textit{reductions}\texttt{)} \\
-\end{tabular}
-\caption{OpenACC subset grammar accepted by the translation tool.  The syntax
-of \textit{vars} and \textit{reductions} is omitted.  The nonterminals
-\textit{data-clauses} and \textit{loop-clauses} correspond to sequences of zero
-or more phrases derived from \textit{data-clause} and \textit{loop-clause},
-respectively.}
-\label{fig:grammar}
-\end{figure}
-
-\newcommand{\translate}[1]{\ensuremath{\mathcal{T}[\![ #1 ]\!]}}
-\begin{figure*}
-\begin{align*}
-%
-\translate{\texttt{\#pragma acc data\ }\textit{data-clauses}} &=
-   \texttt{\#pragma omp target data } \translate{\textit{data-clauses}} \\
-%
-\translate{\texttt{copyin(}\textit{vars}\texttt{)}} &=
-   \texttt{map(to:}\textit{vars}\texttt{)} \\
-%
-\translate{\texttt{copyout(}\textit{vars}\texttt{)}} &=
-   \texttt{map(from:}\textit{vars}\texttt{)} \\
-%
-\translate{\texttt{create(}\textit{vars}\texttt{)}} &=
-   \texttt{map(alloc:}\textit{vars}\texttt{)} \\
-%
-\translate{\texttt{\#pragma acc parallel loop}} &=
-   \left\{\parbox{2in}{%
-   \texttt{\#pragma omp target} \\
-   \texttt{\#pragma omp teams} \\
-   \texttt{\#pragma omp distribute}}\right. \\
-%
-\translate{\texttt{\#pragma acc parallel}} &= %\textit{parallel-clauses}} &=
-   \left\{\parbox{2in}{%
-   \texttt{\#pragma omp target} \\
-   \texttt{\#pragma omp teams}}\right. \\
-%
-\translate{\texttt{\#pragma acc loop\ }\textit{loop-clauses}} &=
-   \texttt{\#pragma omp parallel for\ }\textit{loop-clauses} \\
-%
-\end{align*}
-\caption{Translation rules from OpenACC to OpenMP~4.  The function
-$\mathcal{T}$ maps an OpenACC directive to a sequence of one or more OpenMP
-directives.}
-\label{fig:rules}
-\end{figure*}
 
 \textbf{Example:}
 
 \todo{0.5 page - description of the conversion algorithm (what clauses translate to what?) - Nawrin/Dr.Overbey} 
 \section{Evaluation}
+
+PGCC~16.1 and Clang~3.8
+
 \todo{1 page including tables - evaluation: what code did we test it on; how many lines changed; what performance numbers did we get - Nawrin}
 \subsection{Test Corpus}
 \subsection{Performance}
