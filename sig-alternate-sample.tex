@@ -259,6 +259,8 @@ email: {\texttt{jsmith@affiliation.org}}) and Julius P.~Kumquat
 \todo{Dr. Overbey}
 
 \section{Overview}
+\subsection{CUDA Execution Model}
+CUDA is parallel programming platform created by NVIDIA that allows programmer to write ``kernel"-- function executed on device by running many GPU threads concurrently. Only one kernel executes at a time. All of the threads in a kernel are collectively called a ``grid". A grid contains multiple thread blocks, organized into one, two, or three-dimensional array. Again, each thread block is organized into one, two, or three-dimensional array of threads. Each thread block is assigned to one Streaming Multiprocessor (SM). Each SM consists of several Streaming Processors (SPs). Each thread of a thread block is assigned to one of the SPs within the SM. In CUDA, thread blocks are typically divided into thread groups called Warps. Warps are executed in single instruction, multiple data (SIMD) fashion. The SM can context-switch from one wrap to another with zero-overhead thread scheduling. Again threads within a block can coordinate using barrier synchronization whereas threads in different blocks cannot (no execution order for block)~\cite{kirk2012programming}.
 \subsection{OpenACC Directives}
 \todo{Alexander}
 \subsection{OpenMP 4 Directives}
