@@ -641,12 +641,19 @@ not be automatically converted:
 \item The header file \texttt{openacc.h} is included.
 \item The macro \texttt{\_OPENACC} is used.
 \item Functions in the OpenACC runtime library are called or referenced.
+\item The \texttt{kernels} directive is used.
 \end{itemize}
 \item Prepare parallel loop nests using the algorithm described in
 \S\ref{sec:loops} below.
 \item Apply the translation rules described below in \S\ref{sec:directives} to
 convert OpenACC directives to OpenMP directives.
 \end{enumerate}
+
+The \texttt{\#pragma acc kernels} directive is effectively a request for
+automatic parallelization; the compiler must decide what loops to parallelize
+and how.  There is no direct equivalent in OpenMP\@.  Thus, our algorithm does
+not support the kernels directive.  Instead, the programmer should modify the
+code to explicitly parallelize loops using the \texttt{parallel} directive.
 
 \subsection{Loop Nest Preparation}
 \label{sec:loops}
@@ -799,83 +806,167 @@ loop nest, but it does not literally insert OpenACC \texttt{gang},
 it retains them if they are already present in the code).
 
 \subsection{Translation Tool}
-We prototyped the refactoring in a PLDT OpenACC Eclipse plug-in (C analyses and refactorings for OpenACC). Our tool support various data flow analyses, dependence analysis, refactorings, and parser for OpenACC directives. It provides an user interface (UI) for refactorings. Other than UI, it also supports command line interface (CLI), so one can run the refactorings outside Eclipse. 
 
-Our tool does not handle all the OpenACC directives. We transformed the directives present in EPCC level 1 OpenACC benchmark except ``kernel" directive. When user invoke a refactoring on a C source file, refactoring engine performs the precondition checking. If preconditions are violated, it shows appropriate error message to user. Then analyses and source translations are executed.
-  
-\subsection{Porting OpenACC To OpenMP Directives (POOD)}
-The \pood refactoring converts OpenACC directives to OpenMP 4.0 directives.
+We prototyped our OpenACC-to-OpenMP translation algorithm by extending the
+Eclipse C/C++ Development Tools.  In addition to our translation algorithm, we
+added support for various data flow analyses and dependence analysis, along
+with a parser for OpenACC directives.  Our translation can be performed from
+within the Eclipse user interface, but we also added a command line interface
+(CLI), so one can run the translation from the command line, without installing
+Eclipse. 
 
-\textbf{Motivation:} While porting OpenACC to OpenMP it is necessary for directives to be compatible. Without automated tooling, a programmer has to manually transform each directives.
+%Our tool does not handle all the OpenACC directives. We transformed the directives present in EPCC level 1 OpenACC benchmark except ``kernel" directive. When user invoke a refactoring on a C source file, refactoring engine performs the precondition checking. If preconditions are violated, it shows appropriate error message to user. Then analyses and source translations are executed.
+%  
+%\subsection{Porting OpenACC To OpenMP Directives (POOD)}
+%The \pood refactoring converts OpenACC directives to OpenMP 4.0 directives.
+%
+%\textbf{Motivation:} While porting OpenACC to OpenMP it is necessary for directives to be compatible. Without automated tooling, a programmer has to manually transform each directives.
+%
+%\textbf{Precondition:} A programmer selects a C source file and invokes the \pooda transformation. The following precondition is checked:
+%
+%\begin{itemize}
+%\item Source file contains OpenACC directives.
+%\item OpenACC directives in source code supported by our transformation tool.
+%\end{itemize}  
+%
+%\textbf{Mechanism:} The refactoring introduces OpenMP directives that correspond to OpenACC directives.
+%
+%POOD first determines all the preprocessor include statements and check whether there is any ``openacc.h". If openacc header presents POOD removes it.\todo{need to remove openacc functions}. From the precondition checking we have the OpenACC preprocessor pragma statements that we want to transform. For each directives Abstract Syntax Tree gives the exact position. POOD removes the existing pragma statment and inserts OpenMP directives on that position based on the directive clause. Table \ref{table:1} lists the OpenACC and corresponding OpenMP clauses that POOD transforms. For any OpenACC data directives with copy, copyin, or copyout clause POOD performs NameBinding analyses\todo{fix} for the variables to find out their declaration. If these variables are declared globally then POOD changes them to local. When all the transformations have completed, POOD writes the changes to file.
+%
+%
+%\begin{table}[t]
+%	\begin{minipage}{0.47\textwidth}
+%%\small
+%\caption{Equivqlent OpenACC and OpenMP clause}
+%\centering
+%\begin{tabular}{ | l@{\hspace{0.1cm}}|  @{\hspace{0.4cm}}r@{\hspace{0.1cm}}|} 
+% \hline
+% \hspace*{0.4cm} OpenACC Clause & OpenMP Clause\hspace*{0.6cm}\\
+% \hspace*{0.5cm} (\#pragma acc)%\footnote{The ID is used to refer to each application in the rest of the paper.} 
+%  & (\#pragma omp)\hspace*{0.6cm} \\
+% \hline
+% data & target data \\ 
+% copy(A[0:n*n]) & map(tofrom:A[0:n*n]) \\
+% copyin(A[0:n*n]) & map(to:A[0:n*n]) \\
+% copyout(A[0:n*n]) & map(from:A[0:n*n]) \\
+% create(A[0:n*n]) & map(to:A[0:n*n]) \\ 
+% parallel & target/teams \\ 
+% parallel loop private(t1,t2) & parallel for private(t1,t2) \\
+% loop & for \\
+% loop private(tmp) & for private(tmp) \\
+% loop reduction(+:t1,t2) & for reduction(+:t1,t2) \\
+% loop independent & for independent \\
+% parallel loop & target/teams/distribute \\
+% \hline
+%\end{tabular}
+%
+%\label{table:1}
+%\end{minipage}
+%\end{table}
+%%\normalsize
+%
+%
+%\textbf{Example:}
 
-\textbf{Precondition:} A programmer selects a C source file and invokes the \pooda transformation. The following precondition is checked:
-
-\begin{itemize}
-\item Source file contains OpenACC directives.
-\item OpenACC directives in source code supported by our transformation tool.
-\end{itemize}  
-
-\textbf{Mechanism:} The refactoring introduces OpenMP directives that correspond to OpenACC directives.
-
-POOD first determines all the preprocessor include statements and check whether there is any ``openacc.h". If openacc header presents POOD removes it.\todo{need to remove openacc functions}. From the precondition checking we have the OpenACC preprocessor pragma statements that we want to transform. For each directives Abstract Syntax Tree gives the exact position. POOD removes the existing pragma statment and inserts OpenMP directives on that position based on the directive clause. Table \ref{table:1} lists the OpenACC and corresponding OpenMP clauses that POOD transforms. For any OpenACC data directives with copy, copyin, or copyout clause POOD performs NameBinding analyses\todo{fix} for the variables to find out their declaration. If these variables are declared globally then POOD changes them to local. When all the transformations have completed, POOD writes the changes to file.
-
-
-\begin{table}[t]
-	\begin{minipage}{0.47\textwidth}
-%\small
-\caption{Equivqlent OpenACC and OpenMP clause}
-\centering
-\begin{tabular}{ | l@{\hspace{0.1cm}}|  @{\hspace{0.4cm}}r@{\hspace{0.1cm}}|} 
- \hline
- \hspace*{0.4cm} OpenACC Clause & OpenMP Clause\hspace*{0.6cm}\\
- \hspace*{0.5cm} (\#pragma acc)%\footnote{The ID is used to refer to each application in the rest of the paper.} 
-  & (\#pragma omp)\hspace*{0.6cm} \\
- \hline
- data & target data \\ 
- copy(A[0:n*n]) & map(tofrom:A[0:n*n]) \\
- copyin(A[0:n*n]) & map(to:A[0:n*n]) \\
- copyout(A[0:n*n]) & map(from:A[0:n*n]) \\
- create(A[0:n*n]) & map(to:A[0:n*n]) \\ 
- parallel & target/teams \\ 
- parallel loop private(t1,t2) & parallel for private(t1,t2) \\
- loop & for \\
- loop private(tmp) & for private(tmp) \\
- loop reduction(+:t1,t2) & for reduction(+:t1,t2) \\
- loop independent & for independent \\
- parallel loop & target/teams/distribute \\
- \hline
-\end{tabular}
-
-\label{table:1}
-\end{minipage}
-\end{table}
-%\normalsize
-
-
-\textbf{Example:}
-
-\todo{0.5 page - description of the conversion algorithm (what clauses translate to what?) - Nawrin/Dr.Overbey} 
 \section{Evaluation}
 \label{sec:eval}
 
-PGCC~16.1 and Clang~3.8
+%\begin{table}
+%\begin{tabular}{ | l@{\hspace{0.1cm}}|  @{\hspace{0.4cm}}r@{\hspace{0.1cm}}|} 
+%Test Code    & Number of Directives \\
+%EPCC Level~1 & \\
+%
+%\end{tabular}
+%\end{table}
 
-\todo{1 page including tables - evaluation: what code did we test it on; how many lines changed; what performance numbers did we get - Nawrin}
-\subsection{Test Corpus}
-\subsection{Performance}
+To evaluate the correctness of our tool, we used it to translate the EPCC
+Level~1 OpenACC benchmarks~\cite{epcc}, which are ports of the PolyBench and
+PolyBench/GPU kernels~\cite{polybench}.  We also translated several
+miscellaneous test programs, including naive and tiled matrix multiplication
+kernels.  We compiled the original OpenACC code using PGCC~16.1 and the
+resulting OpenMP code using Clang~3.8.  Performance measurements were taken on
+a Tesla K40 (Comet and Stampede have Tesla K20 GPUs).
 
+The EPCC Level~1 benchmarks contain a total of 70 OpenACC directives, three of
+which are \emph{kernels} directives that our tool would not translate directly.
+Of the remaining 67 directives, 13 were data directives, 23 were parallel loop
+directives, and 31 were loop directives nested under other parallel directives.
+There was only one OpenACC API call: a call to \texttt{acc\_init}, used to
+initialize the GPU and the OpenACC runtime.
+
+This suggests that a tool like ours could be quite valuable.  Only two changes
+needed to be made by the programmer: removing \texttt{acc\_init} and converting
+the three \emph{kernels} regions.  The remaining 67 directives could all be
+converted automatically, without manual intervention.
 
 \section{Limitations and Future Work}
 \label{sec:future}
-\todo{1 page - limitations, including directives not handled, and future work - Dr. Overbey}
 
-\section{Related Work}
-\section{Conclusion}
-\todo{Dr. Overbey}
+Our tool is a prototype, and our translation algorithm supports only a few
+commonly used OpenACC directives.  Some areas for improvement are obvious.  The
+algorithm needs to be expanded to include the entire OpenACC specification,
+including asynchronous kernel launches, unstructured data lifetimes, and
+OpenACC API calls.  Our tool works only on C, while OpenACC and OpenMP both
+support C++ and Fortran.  While the EPCC benchmarks were useful for evaluating
+our prototype, we need to test its effectiveness on larger code bases (i.e.,
+application codes), ideally by working with other XSEDE collaborators.
+
+While automating a tedious 1--1 translation is helpful, it is not the end of
+the conversion process.  As noted earlier, a common XSEDE use case will likely
+be converting OpenACC code to take advantage of the forthcoming
+second-generation Intel Xeon Phis on Stampede.  Our translation algorithm (and
+tool) could certainly be specialized for this process.
+
+After the initial OpenMP code has been created, some restructuring will almost
+certainly be necessary.  For example, we have performed some preliminary
+experiments with Intel's compilers on first-generation Phis; in one case, we
+needed to convert global variables to local variables to ensure that the OpenMP
+\emph{target data} directive would guarantee a copy of the arrays to the Phi.
+Cataloging (and perhaps automating) such transformations would be beneficial.
+
+Perhaps more importantly, performance portability is not guaranteed.  A direct
+translation of OpenACC code optimized for an NVIDIA GPU will not necessary
+perform at its peak on a Xeon Phi.
+
+Interestingly, we did not even obtain comparable performance targeting the
+\emph{same} hardware.  In our test cases, the GPU kernels generated by Clang
+were almost always several times slower than those generated by PGCC.  For
+example, consider the naive matrix multiplication kernel in
+Figure~\ref{fig:matmul}.  With $2048 \times 2048$ matrices, the OpenACC kernel
+ran for about 250~ms; the OpenMP kernel ran for about 925~ms.  Since the
+OpenACC and OpenMP codes were nearly identical, and they were running on the
+same hardware, we did not expect such massive differences in performance.
+Clearly, details of the compiler-generated code can have a substantial impact
+on performance.  Again, documenting differences in compilers would be
+helpful---what sort of performance change is typical, what can be done to
+improve performance when changing from compiler X to compiler Y, etc.
+
+\begin{figure}
+\begin{verbatim}
+#pragma omp target teams distribute
+#pragma acc parallel loop gang
+for (int j = 0; j < N; j++) {
+    #pragma omp parallel for
+    #pragma acc loop vector
+    for (int i = 0; i < N; i++) {
+        double t = 0.0;
+        #pragma acc loop seq
+        for (int k = 0; k < N; k++) {
+            t += m[k][i] * n[j][k];
+        }
+        p[j][i] = t;
+    }
+}
+\end{verbatim}
+\caption{Naive matrix multiplication.}
+\label{fig:matmul}
+\end{figure}
+
+%\section{Conclusion}
+
 
 %ACKNOWLEDGMENTS are optional
-\section{Acknowledgments}
-
+%\section{Acknowledgments}
 
 %
 % The following two commands are all you need in the
