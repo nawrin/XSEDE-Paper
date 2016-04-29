@@ -48,6 +48,7 @@
 \documentclass{sig-alternate-05-2015}
 \usepackage{xcolor}
 \usepackage{xspace}
+\hyphenpenalty=750
 \newcommand\todo[1]{\textcolor{red}{** #1}}
 \newcommand{\pooda}{\textsc{POOD}\xspace}
 
@@ -74,122 +75,56 @@
 
 
 % DOI
-\doi{10.475/123_4}
+\doi{}
 
 % ISBN
-\isbn{123-4567-24-567/08/06}
+\isbn{}
 
 %Conference
-\conferenceinfo{PLDI '13}{June 16--19, 2013, Seattle, WA, USA}
+\conferenceinfo{XSEDE '16}{July 17--21, 2016, Miami, FL, USA}
 
 \acmPrice{\$15.00}
 
 %
 % --- Author Metadata here ---
-\conferenceinfo{WOODSTOCK}{'97 El Paso, Texas USA}
 %\CopyrightYear{2007} % Allows default copyright year (20XX) to be over-ridden - IF NEED BE.
 %\crdata{0-12345-67-8/90/01}  % Allows default copyright data (0-89791-88-6/97/05) to be over-ridden - IF NEED BE.
 % --- End of Author Metadata ---
 
-\title{Toward Automatic Translation from OpenACC to OpenMP 4}
-%\subtitle{[Extended Abstract]
-%\titlenote{A full version of this paper is available as
-%\textit{Author's Guide to Preparing ACM SIG Proceedings Using
-%\LaTeX$2_\epsilon$\ and BibTeX} at
-%\texttt{www.acm.org/eaddress.htm}}}
-%
-% You need the command \numberofauthors to handle the 'placement
-% and alignment' of the authors beneath the title.
-%
-% For aesthetic reasons, we recommend 'three authors at a time'
-% i.e. three 'name/affiliation blocks' be placed beneath the title.
-%
-% NOTE: You are NOT restricted in how many 'rows' of
-% "name/affiliations" may appear. We just ask that you restrict
-% the number of 'columns' to three.
-%
-% Because of the available 'opening page real-estate'
-% we ask you to refrain from putting more than six authors
-% (two rows with three columns) beneath the article title.
-% More than six makes the first-page appear very cluttered indeed.
-%
-% Use the \alignauthor commands to handle the names
-% and affiliations for an 'aesthetic maximum' of six authors.
-% Add names, affiliations, addresses for
-% the seventh etc. author(s) as the argument for the
-% \additionalauthors command.
-% These 'additional authors' will be output/set for you
-% without further effort on your part as the last section in
-% the body of your article BEFORE References or any Appendices.
+\title{From OpenACC to OpenMP 4: \\ Toward Automatic Translation}
 
-\numberofauthors{8} %  in this sample file, there are a *total*
-% of EIGHT authors. SIX appear on the 'first-page' (for formatting
-% reasons) and the remaining two appear in the \additionalauthors section.
-%
+\def\sharedaffiliation{%
+\end{tabular}
+\begin{tabular}{c}}
+
+\numberofauthors{4}
 \author{
-% You can go ahead and credit any number of authors here,
-% e.g. one 'row of three' or two rows (consisting of one row of three
-% and a second row of one, two or three).
-%
-% The command \alignauthor (no curly braces needed) should
-% precede each author name, affiliation/snail-mail address and
-% e-mail address. Additionally, tag each line of
-% affiliation/address with \affaddr, and tag the
-% e-mail address with \email.
-%
-% 1st. author
 \alignauthor
-Ben Trovato\titlenote{Dr.~Trovato insisted his name be first.}\\
-       \affaddr{Institute for Clarity in Documentation}\\
-       \affaddr{1932 Wallamaloo Lane}\\
-       \affaddr{Wallamaloo, New Zealand}\\
-       \email{trovato@corporation.com}
-% 2nd. author
+Nawrin Sultana \\
+\email{nzs0034@auburn.edu}
 \alignauthor
-G.K.M. Tobin\titlenote{The secretary disavows
-any knowledge of this author's actions.}\\
-       \affaddr{Institute for Clarity in Documentation}\\
-       \affaddr{P.O. Box 1212}\\
-       \affaddr{Dublin, Ohio 43017-6221}\\
-       \email{webmaster@marysville-ohio.com}
-% 3rd. author
-\alignauthor Lars Th{\o}rv{\"a}ld\titlenote{This author is the
-one who did all the really hard work.}\\
-       \affaddr{The Th{\o}rv{\"a}ld Group}\\
-       \affaddr{1 Th{\o}rv{\"a}ld Circle}\\
-       \affaddr{Hekla, Iceland}\\
-       \email{larst@affiliation.org}
+Alexander Calvert \\
+\email{afc0005@auburn.edu}
+\alignauthor
+Jeffrey L.\@ Overbey \\
+\email{joverbey@auburn.edu}
+\sharedaffiliation
+       \affaddr{Department of Computer Science and Software Engineering}\\
+       \affaddr{Auburn University}\\
+       \affaddr{Auburn University, AL, USA}
 \and  % use '\and' if you need 'another row' of author names
-% 4th. author
-\alignauthor Lawrence P. Leipuner\\
-       \affaddr{Brookhaven Laboratories}\\
-       \affaddr{Brookhaven National Lab}\\
-       \affaddr{P.O. Box 5000}\\
-       \email{lleipuner@researchlabs.org}
-% 5th. author
-\alignauthor Sean Fogarty\\
-       \affaddr{NASA Ames Research Center}\\
-       \affaddr{Moffett Field}\\
-       \affaddr{California 94035}\\
-       \email{fogartys@amesres.org}
-% 6th. author
-\alignauthor Charles Palmer\\
-       \affaddr{Palmer Research Laboratories}\\
-       \affaddr{8600 Datapoint Drive}\\
-       \affaddr{San Antonio, Texas 78229}\\
-       \email{cpalmer@prl.com}
+\alignauthor
+\alignauthor
+Galen Arnold \\
+\email{gwarnold@illinois.edu}
+\alignauthor
+\sharedaffiliation
+       \affaddr{National Center for Supercomputing Applications}\\
+       \affaddr{University of Illinois at Urbana-Champaign}\\
+       \affaddr{Urbana, IL, USA}
 }
-% There's nothing stopping you putting the seventh, eighth, etc.
-% author on the opening page (as the 'third row') but we ask,
-% for aesthetic reasons that you place these 'additional authors'
-% in the \additional authors block, viz.
-\additionalauthors{Additional authors: John Smith (The Th{\o}rv{\"a}ld Group,
-email: {\texttt{jsmith@affiliation.org}}) and Julius P.~Kumquat
-(The Kumquat Consortium, email: {\texttt{jpkumquat@consortium.net}}).}
-\date{30 July 1999}
-% Just remember to make sure that the TOTAL number of authors
-% is the number that will appear on the first page PLUS the
-% number that will appear in the \additionalauthors section.
+
+\date{}
 
 \maketitle
 \begin{abstract}
@@ -248,26 +183,204 @@ email: {\texttt{jsmith@affiliation.org}}) and Julius P.~Kumquat
 \keywords{ACM proceedings; \LaTeX; text tagging}
 
 \section{Introduction}
-\todo{1 page - introduction/summary of the work - Dr. Overbey}
 
-\section{Motivation}
+While CUDA and OpenCL are the canonical APIs for programming accelerator
+devices, scientific programmers are increasingly turning to directive-based
+APIs, which are more concise and declarative.  Since it first appeared in 2011,
+OpenACC has been the standard directive-based API for scientific programmers
+targeting NVIDIA GPUs.  OpenMP~4.0 added directives for accelerators, inspired
+by OpenACC\@.  Both OpenACC and OpenMP are supported in both C/C++ and Fortran.
+
+OpenACC is supported by PGI's compilers.  Intel's compilers support OpenMP~4.
+Cray recently announced that their support for OpenACC will be frozen at
+version~2.0, and future development will focus on OpenMP~4 device directives.
+Recent versions of GCC support OpenACC; recent versions of Clang support
+OpenMP~4.
+
+So, the two APIs are rivals, at least for the time being.
+
+Since nearly every compiler supports OpenMP for multicore parallelism, it is
+reasonable to expect that the device directives added in OpenMP~4 will
+eventually supplant OpenACC\@.  However, that certainly has not happened
+yet---and given the strong backing for OpenACC from PGI/NVIDIA, there may
+continue to be some rivalry between the two specifications.
+
+In the XSEDE ecosystem, the PGI compilers are installed on Comet (at SDSC),
+allowing OpenACC to be used for programming its NVIDIA GPU nodes.  At TACC,
+portions of Stampede are being upgraded to the second-generation Intel Xeon Phi
+(codenamed ``Knight's Landing''), which can be programmed using OpenMP~4.
+
+Since OpenACC inspired the device directives added in OpenMP~4.0, the two APIs
+are quite similar.  In many cases, there is a 1--1 mapping between directives.
+However, there are some important differences as well.
+
+In this paper, we investigate the feasibility of a tool to semi-automatically
+convert OpenACC code to use OpenMP~4 device directives.  We have prototyped a
+tool that automates a large part of the conversion process; we have also
+identified parts of the conversion process that must be (or should be) left to
+the programmer.
+
+We focused on converting OpenACC to OpenMP~4 \emph{that targets the same
+accelerator device}---an NVIDIA GPU.  We used PGI~C/C++~16.1 as our OpenACC
+compiler, and we used Clang~3.8 as our OpenMP compiler.
+
+We chose this setup because it allowed us to investigate changes in semantics
+and performance that result from \emph{changing the compiler and API}, rather
+than those that result from a change in target hardware.  Admittedly, for XSEDE
+users, a more realistic scenario would be converting OpenACC on Comet (which
+targets NVIDIA GPUs) to OpenMP on Stampede (which targets Xeon Phi's).
+However, changing the target hardware in addition to the compiler and API
+introduces additional complexity.  Keeping the target hardware fixed allowed us
+to focus on the differences between OpenACC and OpenMP, rather than differences
+in the accelerator devices themselves.
+
+We used the EPCC Level~1 benchmarks as our test cases, along with a few
+miscellaneous examples, and we focused on the subset of OpenACC used by these
+programs.  Our results show that \emph{some} aspects of OpenACC-to-OpenMP
+conversion can be automated, but some manual intervention is essential.
+Also, both APIs rely heavily on the compiler, potentially making a change in
+compilers one of the biggest obstacles in converting code from OpenACC to
+OpenMP~4.
+
+The remainder of this paper is organized as follows.
+Section~\ref{sec:bg} gives a brief history and overview of OpenACC and OpenMP\@.
+Section~\ref{sec:translation} discusses translation from OpenACC to OpenMP,
+focusing on complications that prohibit completely automatic translation.
+Section~\ref{sec:algorithm} describes our tool and the algorithm it uses to
+convert OpenACC to OpenMP device directives.
+Section~\ref{sec:eval} presents empirical data describing the conversion.
+Section~\ref{sec:future} describes limitations of the current tool and
+directions for future work.
+
+\section{Background}
+\label{sec:bg}
+
 \subsection{History of OpenACC and OpenMP}
-\todo{Alexander}
-\subsection{Future of OpenACC and OpenMP}
-\todo{Alexander}
-\subsection{Relevance to XSEDE}
-\todo{Dr. Overbey}
 
-\section{Overview}
+OpenACC has a short history. It was originally developed by PGI, Cray, and
+NVIDIA, with version 1.0 being released in 2011. Version 2.0 was released in
+2013, adding support for procedure calls and nested parallelization (enabled by
+new CUDA capabilities), among other features. Version 2.5 was a more minor
+revision, made in 2015.
+
+%In the 1980's, SMP vendors typically defined directives for specifying how their SMP's divided up work on their individual processors. In the late 90's, 
+OpenMP dates back to the late 1990s, when the OpenMP Architecture Review Board
+was formed to develop a specification for directive-based parallelism that
+could be used commonly across multiple vendors' multiprocessors. The first
+OpenMP specification was released for Fortran in 1997 and for C/C++ in 1998.
+The OpenMP specification has undergone several revisions since that time.
+Notably, %task parallelism was added in version~3.0, and 
+version~4.0 added support for accelerators in 2013.  The so-called
+\emph{device directives} or \emph{target directives} added to support this
+were based on OpenACC.  However, as we will see, the two APIs are not
+identical.
+
 \subsection{CUDA Execution Model}
-CUDA is parallel programming platform created by NVIDIA that allows programmer to write ``kernel"-- function executed on device by running many GPU threads concurrently. Only one kernel executes at a time. All of the threads in a kernel are collectively called a ``grid". A grid contains multiple thread blocks, organized into one, two, or three-dimensional array. Again, each thread block is organized into one, two, or three-dimensional array of threads. Each thread block is assigned to one Streaming Multiprocessor (SM). Each SM consists of several Streaming Processors (SPs). Each thread of a thread block is assigned to one of the SPs within the SM. In CUDA, thread blocks are typically divided into thread groups called Warps. Warps are executed in single instruction, multiple data (SIMD) fashion. The SM can context-switch from one wrap to another with zero-overhead thread scheduling. Again threads within a block can coordinate using barrier synchronization whereas threads in different blocks cannot (no execution order for block)~\cite{kirk2012programming}.
+
+OpenACC and OpenMP device directives are both designed to offload computations
+to accelerator devices---massively parallel devices like GPUs and Xeon Phis,
+designed for data parallel computations.  Each API has its own execution model,
+which is intentionally abstract to avoid coupling it to the specifics of any
+one device.
+
+For the purposes of this paper, we will only focus on one type of accelerator
+device: NVIDIA GPUs.  To understand the behavior of OpenACC and OpenMP
+constructs on these devices, it is helpful to understand their execution
+model---the CUDA execution model.
+
+CUDA-capable devices (i.e., NVIDIA GPUs) execute \emph{kernels}, functions that
+execute on the device by running many GPU threads concurrently. Only one kernel
+executes at a time. All of the threads in a kernel are collectively called a
+\emph{grid}. A grid is comprised of one or more \emph{thread blocks}, and each
+thread block is comprised of one or more \emph{threads}.
+
+In hardware, each thread block is assigned to one Streaming Multiprocessor
+(SM). Each SM consists of several Streaming Processors (SPs); each thread of a
+thread block is assigned to one of the SPs within the SM.  Thread blocks are
+divided into 32-thread groups called \emph{warps}.  Instructions are fetched
+and executed on a per-warp basis, not on a per-thread basis, so the 32 threads
+within each warp execute instructions in single instruction, multiple data
+(SIMD) fashion.  The SM context switches from one warp to another at every
+instruction issue (``zero-overhead thread scheduling''), so while threads
+within a warp execute in lockstep, threads in \emph{different} warps may not.
+Threads within a block can coordinate using barrier synchronization, whereas
+threads in different blocks cannot~\cite{kirk2012programming}.
+
+\subsection{OpenMP~4 Directives}
+
+\emph{Parallel.}
+OpenMP's fundamental construct is the parallel construct. When a parallel
+construct is encountered by a thread, that thread creates a \emph{team} of new
+threads, becoming that team's master. The threads are assigned numbers, with
+the master given number 0. The threads each execute a copy of the parallel
+region's code. %None of the child threads may continue execution beyond the
+%parallel region, and if any thread terminates within the region, the work done
+%up to that point is undefined. Nested parallelism is legal in OpenMP, so
+%parallel constructs may contain nested parallel constructs. 
+
+\emph{For.}
+Inside a parallel region, a \emph{for} construct may be specified. A for region
+is associated with a for loop, and upon encountering the region, a different
+thread from the current team is assigned to each iteration of the for loop. A
+parallel for region is also defined as a shorthand for a parallel region
+containing nothing but a single for region. OpenMP 4.0 adds a similar
+construct, simd, which divides work of the associated loop up among SIMD lanes
+of the current thread. 
+
+\emph{Target Data.}
+A target data region may be specified as well. A target data region creates a
+data environment for execution. It may specify a device clause, which specifies
+a device to execute the environment on, and a map clause, which specifies a
+mapping of data from the host to the device. 
+
+\emph{Target Teams.}
+A target teams construct is equivalent to a target construct containing a teams
+construct. The target teams construct creates a data environment and a
+\emph{league} of thread teams to execute it. 
+
+\emph{Distribute.}
+A distribute construct creates a league of teams and specifies that contained
+loops will be executed by those teams. 
+
+\emph{Distribute Parallel For.}
+A distribute parallel for construct combines distribute, parallel, and for
+construct to specify that a loop can be executed in parallel by multiple
+threads in multiple teams. 
+
 \subsection{OpenACC Directives}
-\todo{Alexander}
-\subsection{OpenMP 4 Directives}
-\todo{Alexander}
+
+OpenACC has fewer constructs. This is in part because OpenACC is specifically
+for use with massively parallel accelerator hardware, where OpenMP supports
+accelerators as well as multicore CPUs. %As a result, task parallelism is not
+%present in OpenACC.
+However, many of OpenACC's construct are analogous to OpenMP ones. 
+
+\emph{Parallel.}
+OpenACC also has a parallel construct. A parallel construct, when encountered,
+creates \emph{gangs of workers} to execute the region on the accelerator.
+
+\emph{Loop.}
+A loop construct is also available, specifying the type of parallelism for the
+associated loop. There is also the parallel loop abbreviation, a shorthand for
+a loop construct immediately inside a parallel construct. 
+
+\emph{Kernels.}
+The kernels construct specifies a region that is to be divided into a sequence
+of kernels for accelerator execution. The loop and shorthand kernels loop are
+available for kernels directives as they are for parallel directives. 
+
+\emph{Data.}
+A data directive is also defined. It specifies for a region what data should be
+copied into the accelerator upon entry to the region and copied out on exit and
+defines what data is to be allocated on the device for the duration of the
+region. %Alternatively, the specification provides enter data and exit data
+%directives that specify data allocation in the same way, but without defining a
+%region -  enter data device allocations simply exist until exit data directives
+%deallocate them.
 
 \section{Translation}
-\todo{1 page including screenshot(s) - description of our tool: what directives it handles, how it works, where to get it - Nawrin}
+\label{sec:translation}
+
 The major compilers supporting OpenACC are Portland Group (PGI), Cray, and CAPS. On the other hand, Intel has decided not to support OpenACC until accelerators are fully integrated into OpenMP. We describe an automated approach to assist programmers in converting OpenACC to OpenMP, so that same syntax could be used for both Cray and Intel compiler while maintaining the performance. We describe a refactoring (POOD) for this purpose.
 
 \subsection{A Subset of OpenACC}
@@ -530,10 +643,7 @@ means that porting from OpenACC to OpenMP~4 will almost certainly involve
 some manual effort.  Nevertheless, much of the translation is straightforward
 and tedious, which makes it worth automating.
 
-Our tool implements the translation rules in Figure~\ref{fig:rules}.  The
-majority of the translation is straightforward: Each phrase in OpenACC is
-mapped to a corresponding phrase in OpenMP\@.  These translation rules were
-designed with the following objectives:
+Our translation algorithm was designed with the following objectives:
 \begin{itemize}
 \item \emph{The translation should be straightfoward and consistent.}
 Each OpenACC directive should translate to the same OpenMP directive(s)
@@ -548,6 +658,26 @@ More sophisticated changes---like performance tuning---should be under the
 control of the programmer.
 \end{itemize}
 
+The translation algorithm is as follows.  The input is a C source file
+containing OpenACC directives.  The output is the same file with these
+directives replaced by OpenMP directives.
+\begin{enumerate}
+\item If any of the following occur, warn the user; these structures will
+not be automatically converted:
+\begin{itemize}
+\item The header file \texttt{openacc.h} is included.
+\item The macro \texttt{\_OPENACC} is used.
+\item Functions in the OpenACC runtime library are called or referenced.
+\end{itemize}
+\item Label loops using the algorithm described in \S\ref{sec:loops}.
+\item Apply the translation rules in Figure~\ref{fig:rules} to convert
+OpenACC directives to OpenMP directives.
+\end{enumerate}
+
+Our tool implements the translation rules in Figure~\ref{fig:rules}.  The
+majority of the translation is straightforward: Each phrase in OpenACC is
+mapped to a corresponding phrase in OpenMP\@.  
+
 \subsubsection{Translating Data Directives}
 
 It is important to note that, according to the translation rules in
@@ -555,6 +685,7 @@ Figure~\ref{fig:rules}, \emph{each data directive is translated as-is}.  No
 attempt is made to infer implicit data transfers or array lengths.
 
 \subsubsection{Translating Loop Nests}
+\label{sec:loops}
 
 OpenACC's \texttt{gang} clause is roughly equivalent to OpenMP's
 \texttt{distribute}---effectively, it distributes work among thread blocks.
@@ -637,6 +768,7 @@ POOD first determines all the preprocessor include statements and check whether 
 
 \todo{0.5 page - description of the conversion algorithm (what clauses translate to what?) - Nawrin/Dr.Overbey} 
 \section{Evaluation}
+\label{sec:eval}
 
 PGCC~16.1 and Clang~3.8
 
@@ -646,6 +778,7 @@ PGCC~16.1 and Clang~3.8
 
 
 \section{Limitations and Future Work}
+\label{sec:future}
 \todo{1 page - limitations, including directives not handled, and future work - Dr. Overbey}
 
 \section{Related Work}
