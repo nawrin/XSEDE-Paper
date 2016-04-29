@@ -145,34 +145,26 @@ necessary in this area.
 %
 \begin{CCSXML}
 <ccs2012>
- <concept>
-  <concept_id>10010520.10010553.10010562</concept_id>
-  <concept_desc>Computer systems organization~Embedded systems</concept_desc>
-  <concept_significance>500</concept_significance>
- </concept>
- <concept>
-  <concept_id>10010520.10010575.10010755</concept_id>
-  <concept_desc>Computer systems organization~Redundancy</concept_desc>
-  <concept_significance>300</concept_significance>
- </concept>
- <concept>
-  <concept_id>10010520.10010553.10010554</concept_id>
-  <concept_desc>Computer systems organization~Robotics</concept_desc>
-  <concept_significance>100</concept_significance>
- </concept>
- <concept>
-  <concept_id>10003033.10003083.10003095</concept_id>
-  <concept_desc>Networks~Network reliability</concept_desc>
-  <concept_significance>100</concept_significance>
- </concept>
-</ccs2012>  
+<concept>
+<concept_id>10010147.10010169.10010175</concept_id>
+<concept_desc>Computing methodologies~Parallel programming languages</concept_desc>
+<concept_significance>500</concept_significance>
+</concept>
+<concept>
+<concept_id>10010147.10011777.10011014</concept_id>
+<concept_desc>Computing methodologies~Concurrent programming languages</concept_desc>
+<concept_significance>300</concept_significance>
+</concept>
+<concept>
+<concept_id>10011007.10011006.10011073</concept_id>
+<concept_desc>Software and its engineering~Software maintenance tools</concept_desc>
+<concept_significance>500</concept_significance>
+</concept>
+</ccs2012>
 \end{CCSXML}
 
-\ccsdesc[500]{Computer systems organization~Embedded systems}
-\ccsdesc[300]{Computer systems organization~Redundancy}
-\ccsdesc{Computer systems organization~Robotics}
-\ccsdesc[100]{Networks~Network reliability}
-
+\ccsdesc[500]{Computing methodologies~Parallel programming languages}
+\ccsdesc[500]{Software and its engineering~Software maintenance tools}
 
 %
 % End generated code
@@ -186,7 +178,7 @@ necessary in this area.
 % We no longer use \terms command
 %\terms{Theory}
 
-\keywords{ACM proceedings; \LaTeX; text tagging}
+\keywords{accelerators; GPUs; OpenACC; OpenMP; translation}
 
 \section{Introduction}
 
@@ -589,7 +581,7 @@ the $j$-loop are divided among threads in the block using the \texttt{parallel
 for} directive.
 %
 OpenACC's \texttt{gang} clause is roughly equivalent to OpenMP's
-\texttt{distribute}---effectively, it distributes work among thread blocks.
+\texttt{distribute}: effectively, it distributes work among thread blocks.
 Likewise, OpenACC's \texttt{vector} clause is roughly equivalent to OpenMP's
 \texttt{parallel for} inside a \texttt{teams} region: it distributes work among
 threads within a block.
@@ -763,6 +755,9 @@ does, we determine it to be non-parallelizable.
 \translate{\texttt{reduction(}\textit{vars}\texttt{)}} &=
    \texttt{reduction(}\textit{reductions}\texttt{)} \\
 %
+\translate{\texttt{independent}} &=
+   \epsilon \\
+%
 \translate{\texttt{\#pragma acc loop\ }\textit{type}\texttt{\ }\textit{loop-clauses}} &=
    \begin{cases}
    \texttt{\#pragma omp distribute parallel for\ }\translate{\textit{loop-clauses}} \\
@@ -774,9 +769,6 @@ does, we determine it to be non-parallelizable.
    \epsilon
         \hspace*{1.65em} \textup{ if $\textit{type} = \texttt{seq}$} \\
    \end{cases} \\
-%
-\translate{\texttt{independent}} &=
-   \epsilon \\
 %
 \end{align*}
 \caption{Translation rules from OpenACC to OpenMP~4.  The function
@@ -980,7 +972,7 @@ benchmarks from OpenACC compiled by PGI C/C++ to OpenMP~4 compiled by Clang.
 Both targeted an NVIDIA GPU (Tesla~K40).  To keep the translation process
 transparent, the programmer was required to manually convert OpenACC
 \emph{kernels} loops, although the tool was able to automatically translate the
-remaining 67 of 70 OpenACC directives
+remaining 67 of 70 directives.
 
 %ACKNOWLEDGMENTS are optional
 %\section{Acknowledgments}
