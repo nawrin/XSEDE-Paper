@@ -909,7 +909,7 @@ converted automatically, without manual intervention.
 \section{Limitations and Future Work}
 \label{sec:future}
 
-Our tool is a prototype, and our translation algorithm supports only a few
+Our tool is a prototype, and our translation algorithm supports only the most
 commonly used OpenACC directives.  Some areas for improvement are obvious.  The
 algorithm needs to be expanded to include the entire OpenACC specification,
 including asynchronous kernel launches, unstructured data lifetimes, and
@@ -969,11 +969,23 @@ for (int j = 0; j < N; j++) {
 \label{fig:matmul}
 \end{figure}
 
-%\section{Conclusion}
+\section{Conclusion}
 
+We have described an algorithm (\S\ref{sec:algorithm}) and a prototype tool
+that converts a subset of OpenACC (Figure~\ref{fig:grammar}) to OpenMP~4.  The
+translation algorithm was designed to be simple and predicatble, since it will
+necessarily be used in conjunction with manual restructuring and performance
+tuning.  We evaluated our tool by converting the EPCC Level~1 OpenACC
+benchmarks from OpenACC compiled by PGI C/C++ to OpenMP~4 compiled by Clang.
+Both targeted an NVIDIA GPU (Tesla~K40).  To keep the translation process
+transparent, the programmer was required to manually convert OpenACC
+\emph{kernels} loops, although the tool was able to automatically translate the
+remaining 67 of 70 OpenACC directives
 
 %ACKNOWLEDGMENTS are optional
 %\section{Acknowledgments}
+
+\newpage
 
 %
 % The following two commands are all you need in the
