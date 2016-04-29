@@ -988,6 +988,16 @@ perform at its peak on a Xeon Phi.  As noted above, we did not even obtain
 comparable performance targeting the
 \emph{same} hardware.
 
+\section{Related Work}
+
+Most related to our work is a talk by Oscar Hernandez et al.\@ at
+OpenMPCon~2015~\cite{hernandez,hernandezvideo}.  This talk describes the
+salient differences between OpenACC~2.0 and OpenMP~4.0 and suggests a
+(manual) procedure for porting code from OpenACC to OpenMP\@.  Their procedure
+consists of five steps: removing constructs with no OpenMP counterparts (like
+\emph{kernels}), translating data regions, translating data updates, translating
+accelerator parallel regions, and adjusting function attribute specifiers.
+
 \section{Conclusion}
 
 We have described an algorithm (\S\ref{sec:algorithm}) and a prototype tool
@@ -1004,7 +1014,7 @@ remaining 67 of 70 directives.
 %ACKNOWLEDGMENTS are optional
 %\section{Acknowledgments}
 
-\newpage
+%\newpage
 
 %
 % The following two commands are all you need in the
