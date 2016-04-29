@@ -990,13 +990,28 @@ comparable performance targeting the
 
 \section{Related Work}
 
-Most related to our work is a talk by Oscar Hernandez et al.\@ at
+Most related to our work is a talk by Hernandez et al.\@ at
 OpenMPCon~2015~\cite{hernandez,hernandezvideo}.  This talk describes the
 salient differences between OpenACC~2.0 and OpenMP~4.0 and suggests a
 (manual) procedure for porting code from OpenACC to OpenMP\@.  Their procedure
 consists of five steps: removing constructs with no OpenMP counterparts (like
 \emph{kernels}), translating data regions, translating data updates, translating
 accelerator parallel regions, and adjusting function attribute specifiers.
+
+%Several directive-based GPU programming models have been proposed over the year to characterize parallel program. 
+Lee and Vetter~\cite{lee2012early} evaluate existing directive-based models and
+show that directive-based models can achieve reasonable performance compared to
+hand-written GPU codes. For accelarator programming, the two most promising
+options are OpenACC and OpenMP.  Wienke et al.~\cite{wienke2014pattern} compare
+both models with respect to their programmability to assist developers in
+deciding which approach to take.  Xu and colleagues~\cite{xu2013exploring}
+demonstrate the effectiveness of a hybrid model combined with OpenACC and
+OpenMP as a plausible solution to port scientific applications in heterogeneous
+architectures. 
+
+%In our work we describe the context for porting OpenACC device directives to OpenMP directives. And proposed an automated tool (with a small manual intervention) to port OpenACC into OpenMP.
+
+\newpage
 
 \section{Conclusion}
 
@@ -1013,8 +1028,6 @@ remaining 67 of 70 directives.
 
 %ACKNOWLEDGMENTS are optional
 %\section{Acknowledgments}
-
-%\newpage
 
 %
 % The following two commands are all you need in the
