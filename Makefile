@@ -1,20 +1,20 @@
 #all:
-#	pdflatex sig-alternate-sample.tex
-#	bibtex sig-alternate-sample
-#	pdflatex sig-alternate-sample.tex
-#	pdflatex sig-alternate-sample.tex
-#	open sig-alternate-sample.pdf
+#	pdflatex paper.tex
+#	bibtex paper
+#	pdflatex paper.tex
+#	pdflatex paper.tex
+#	open paper.pdf
 
 .PHONY: all view aview clean
 
 all: view
 
-sig-alternate-sample.pdf: $(wildcard *.tex) $(wildcard *.bib)
-	pdflatex sig-alternate-sample.tex
-	bibtex sig-alternate-sample
-	pdflatex sig-alternate-sample.tex
-	pdflatex sig-alternate-sample.tex
-	#dvips -Ppdf -Pdownload35 -j0 -G0 -tletter -osig-alternate-sample.ps sig-alternate-sample.dvi
+paper.pdf: $(wildcard *.tex) $(wildcard *.bib)
+	pdflatex paper.tex
+	bibtex paper
+	pdflatex paper.tex
+	pdflatex paper.tex
+	#dvips -Ppdf -Pdownload35 -j0 -G0 -tletter -opaper.ps paper.dvi
 	#ps2pdf \
 	#	-sPAPERSIZE=letter \
 	#	-dCompatibilityLevel=1.3 \
@@ -26,16 +26,16 @@ sig-alternate-sample.pdf: $(wildcard *.tex) $(wildcard *.bib)
 	#	-dColorImageFilter=/FlateEncode \
 	#	-dGrayImageFilter=/FlateEncode \
 	#	-dMonoImageFilter=/FlateEncode  \
-	#	sig-alternate-sample.ps
+	#	paper.ps
 
-view: sig-alternate-sample.pdf
+view: paper.pdf
 	if [ `uname -s` == "Darwin" ]; then \
 		open -a /Applications/Preview.app \
-			sig-alternate-sample.pdf; \
+			paper.pdf; \
 	fi
 
 #	else \
-#		xpdf -paper letter sig-alternate-sample.pdf; \
+#		xpdf -paper letter paper.pdf; \
 
 clean:
 	rm -f *.sch *.log *.aux *.dvi *.idx *.log *.pdf *.ps *.toc *.bbl *.blg
