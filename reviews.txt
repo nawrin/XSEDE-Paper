@@ -1,0 +1,54 @@
+Congratulations! We are delighted to inform you that your XSEDE16 Paper Submission From OpenACC to OpenMP 4: Toward Automatic Translation has been accepted. Attached are the reviews of your paper that you should address before submitting your final paper for the proceedings.
+
+You will be notified soon about the schedule for your presentation at the conference. At least one author must register and attend the conference for the presentation. Please reserve your hotel room by June 15th to guarantee the conference rate, prices will go up considerably after this date. The basic schedule is available here: https://www.xsede.org/web/xsede16/schedule
+
+As an accepted paper, you must prepare a final version of your paper using the latest version of the ACM SIG proceedings templates, available at http://www.acm.org/publications/proceedings-template.
+
+Please follow the template instructions precisely. Corresponding authors will also receive email from the ACM rights management system (rightsreview@acm.org). Upon completion of the online form, the system will email you the appropriate text for the permissions block of your final paper.
+
+The deadline for providing a final paper, with permissions block is June 15. This deadline MUST be met in order to get your paper published.
+
+Maytal Dahan
+Software & Software Environments Track Chair
+
+
+----------------------- REVIEW 1 ---------------------
+PAPER: 135
+TITLE: From OpenACC to OpenMP 4: Toward Automatic Translation
+AUTHORS: Nawrin Sultana, Alexander Calvert, Jeffrey Overbey and Galen Arnold
+
+
+----------- Review -----------
+This paper describes automatic translation of OpenACC code to OpenMP code, applied to a standard OpenACC benchmark suite, and evaluates the performance of the resulting code against the performance of the original code. The same hardware was used for both tests to concentrate on only the abilities of the translator to produce working OpenMP code.
+
+The paper is well written and achieves its stated goal. The topic is timely, the translator is worthwhile, the results are reasonable. Even though the speedups are all slowdowns, this leaves room for improving the automatic translation, or for achieving an initial translation suitable for hand-optimization by the application developer. 
+
+I have no recommendations for improving this paper; it should be accepted as is. Well done. In fact, I do have one recommendation: it would be interesting to see some detail about why the translated code resulted in a slowdown. Such an analysis would be imperative in a performance engineering paper, but it not essential in this paper. So, still, well done.
+
+I found two speling errors:
+- accelarator
+- predicatble
+
+
+----------------------- REVIEW 2 ---------------------
+PAPER: 135
+TITLE: From OpenACC to OpenMP 4: Toward Automatic Translation
+AUTHORS: Nawrin Sultana, Alexander Calvert, Jeffrey Overbey and Galen Arnold
+
+
+----------- Review -----------
+This paper describes a early effort in automatically porting/translating OpenACC directives into OpenMP 4 directives for C codes. The paper clearly highlights the differences and the similarities between OpenACC directives and OpenMP 4 directives and use that to develop a simple grammar for the translator.
+
+Even though there are still limitations with the work (that's why I call this an early effort), I think the effort is worthy. OpenMP has been popular for shared-memory parallel programming and its latest version OpenMP 4 targets accelerators; therefore this works is timely. The paper is well written. I like the amount of background knowledge and the comparison plus the considerations the authors provide in the paper. I would suggest more performance evaluation and discussion conducted for this type of work. Finding a higher execution time for OpenMP 4 against OpenACC for a simple kernel like the provided naive matrix multiplication calls for further study and comparison against OpenMP 4 benchmark results.
+
+
+----------------------- REVIEW 3 ---------------------
+PAPER: 135
+TITLE: From OpenACC to OpenMP 4: Toward Automatic Translation
+AUTHORS: Nawrin Sultana, Alexander Calvert, Jeffrey Overbey and Galen Arnold
+
+
+----------- Review -----------
+The paper presents a tool to automatically convert OpenACC code to OpenMP code. The work is valuable, however, the performance of the converted code is significantly lower than that of the original OpenACC code as noted by the authors. Nevertheless, it can be an initial step for automation the conversion.  
+
+It would be better to discuss related work in parallel compiling area.
