@@ -50,6 +50,7 @@
 \usepackage[latin1]{inputenc}
 \usepackage{xspace}
 \usepackage[table]{xcolor}
+\usepackage{balance} % for \balance
 \hyphenpenalty=750
 \newcommand\todo[1]{\textcolor{red}{** #1}}
 \newcommand{\pooda}{\textsc{POOD}\xspace}
@@ -651,6 +652,8 @@ not be automatically converted:
 \end{itemize}
 \item Prepare parallel loop nests using the algorithm described in
 \S\ref{sec:loops} below.
+\item Remove \emph{private} and \emph{reduction} clauses from sequential
+loops as described in \S\ref{sec:privred} below.
 \item Apply the translation rules described below in \S\ref{sec:directives} to
 convert OpenACC directives to OpenMP directives.
 \end{enumerate}
@@ -723,6 +726,119 @@ parallelizable.
 does not carry a dependence, it is parallelizable~\cite{kennedy}; if it
 does, we determine it to be non-parallelizable.
 \end{enumerate}
+
+\subsection{Sequential Private/Reduction Removal}
+\label{sec:privred}
+
+\begin{figure*}[t]
+\begin{center}
+{\footnotesize
+% (a) Original
+\begin{minipage}{.5\textwidth}
+\texttt{%
+int x, sum = 100; \\
+\textcolor{blue}{\bfseries \#pragma acc loop seq private(x) reduction(+:sum)} \\
+for (int i = 0; i < 5; i++) \{ \\
+\hspace*{2em} x = 100; \\
+\hspace*{2em} sum += x; \\
+\}
+}
+\end{minipage}
+\hspace*{.07\textwidth}
+% (b) Original
+\begin{minipage}{.36\textwidth}
+\texttt{%
+int x; \\
+\textcolor{blue}{\bfseries \#pragma acc loop seq reduction(+:x)} \\
+for (int i = 0; i < 5; i++) \\
+\hspace*{2em} x = 1;
+}
+\end{minipage} \\
+% Arrows
+\begin{minipage}{.5\textwidth}
+\centerline{\rule[-0.5em]{2em}{0em} $\Downarrow$}
+\end{minipage}
+\hspace*{.07\textwidth}
+\begin{minipage}{.36\textwidth}
+\centerline{\rule[-0.5em]{2em}{0em} $\Downarrow$}
+\end{minipage} \\
+% (a) Transformed
+\begin{minipage}{.5\textwidth}
+\texttt{%
+int x, sum = 100; \\
+for (int i = 0; i < 5; i++) \{ \\
+\hspace*{2em} \textcolor{blue}{\bfseries int x;} \\
+\hspace*{2em} x = 100; \\
+\hspace*{2em} sum += x; \\
+\}
+}
+\end{minipage}
+\hspace*{.07\textwidth}
+% (b) Transformed
+\begin{minipage}{.36\textwidth}
+\texttt{%
+int x; \\
+\textcolor{blue}{\bfseries int sum = 0;\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ // (1)} \\
+for (int i = 0; i < 5; i++) \{ \\
+\hspace*{2em} \textcolor{blue}{\bfseries int x = 0;\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ // (2)} \\
+\hspace*{2em} x = 1; \\
+\hspace*{2em} \textcolor{blue}{\bfseries sum += x;\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ // (3)} \\
+\} \\
+\textcolor{blue}{\bfseries x = sum;\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ // (4)}
+}
+\end{minipage} \\
+% Labels
+\begin{minipage}{.5\textwidth}
+\centerline{\rule[-0.5em]{2em}{0em} (a)}
+\end{minipage}
+\hspace*{.07\textwidth}
+\begin{minipage}{.36\textwidth}
+\centerline{\rule[-0.5em]{2em}{0em} (b)}
+\end{minipage} \\
+}
+\end{center}
+\caption{Elimination of \emph{private} and \emph{reduction} clauses on a sequential loop.}
+\label{fig:privred}
+\end{figure*}
+
+After a loop nest has been prepared, there will be a gang loop, a vector loop
+(possibly the same loop), and zero or more sequential loops.  OpenACC has a
+directive for sequential loops (\texttt{acc loop seq}), which permits
+\emph{private} and \emph{reduction} clauses.  However, OpenMP does not have a
+sequential loop directive.  This means that these directives---and more
+importantly, \emph{private} and \emph{reduction} clauses---must be removed from
+sequential loops in a way that will preserve the semantics of the
+\emph{private} and \emph{reduction} clauses.
+
+To remove a \emph{private} clause, we can simply re-declare the privatized
+variable in the loop body, as shown in Figure~\ref{fig:privred}(a) (noting that
+this features requires C99 support, which is available in all modern C
+compilers).  This declaration shadows the declaration in the outer scope,
+which gives the intended semantics of the \emph{private} clause.
+
+To illustrate removing a \emph{reduction} clause, consider as a concrete example
+the clause \texttt{reduction(+:x)}.  There are two cases.
+
+\textit{Case~1}.  This is perhaps the most commonly occurring use of the
+\emph{reduction} clause: If the only accesses to \texttt{x} in the loop
+body are in statements of the form \texttt{x++} or \texttt{x\ +=\
+}\emph{expression} (where \texttt{x} is not assigned in \emph{expression}),
+then the reduction clause can be removed with no change in semantics.  This is
+the case in Figure~\ref{fig:privred}(a), for example.
+
+\textit{Case~2}.  When the above condition does not hold, it is still possible
+to remove a \emph{reduction} clause.  However, preserving the semantics of the
+\emph{reduction} clause requires a more complex source code transformation,
+illustrated in Figure~\ref{fig:privred}(b).
+(1)~A ``fresh'' variable (\texttt{sum}) is declared to accumulate the result.
+(2)~Since \texttt{x} is the reduction variable, a local variable \texttt{x}
+is declared in the loop body with the same type as the shadowed variable
+\texttt{x}, and it is initialized to the initialization value for a sum
+reduction (\texttt{0}).
+(3)~At the end of the loop body, the local \texttt{x} is added to the result
+(\texttt{sum}).
+(4)~After the loop, the accumulated result is stored in the original
+\texttt{x}.
 
 \subsection{Directive Translation}
 \label{sec:directives}
@@ -1016,8 +1132,6 @@ architectures.
 
 %In our work we describe the context for porting OpenACC device directives to OpenMP directives. And proposed an automated tool (with a small manual intervention) to port OpenACC into OpenMP.
 
-\newpage
-
 \section{Conclusion}
 
 We have described an algorithm (\S\ref{sec:algorithm}) and a prototype tool
@@ -1034,6 +1148,7 @@ remaining 67 of 70 directives.
 %ACKNOWLEDGMENTS are optional
 %\section{Acknowledgments}
 
+\balance
 %
 % The following two commands are all you need in the
 % initial runs of your .tex file to
