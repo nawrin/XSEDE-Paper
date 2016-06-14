@@ -421,6 +421,7 @@ correspond to a useful, commonly-used subset of OpenACC.
                        &     $|$     & \texttt{reduction(}\textit{reductions}\texttt{)} \\
 \textit{loop-clause}   &$\rightarrow$& \texttt{independent} \\
                        &     $|$     & \texttt{private(}\textit{vars}\texttt{)} \\
+                       &     $|$     & \texttt{reduction(}\textit{reductions}\texttt{)} \\
 \end{tabular}
 \caption{OpenACC subset grammar accepted by the translation tool.  Syntax is
 omitted for \textit{vars}, \textit{reductions}, and natural numbers \textit{n}.
@@ -736,11 +737,11 @@ does, we determine it to be non-parallelizable.
 % (a) Original
 \begin{minipage}{.5\textwidth}
 \texttt{%
-int x, sum = 100; \\
-\textcolor{blue}{\bfseries \#pragma acc loop seq private(x) reduction(+:sum)} \\
+int p, x = 100; \\
+\textcolor{blue}{\bfseries \#pragma acc loop seq private(p) reduction(+:x)} \\
 for (int i = 0; i < 5; i++) \{ \\
-\hspace*{2em} x = 100; \\
-\hspace*{2em} sum += x; \\
+\hspace*{2em} p = 100; \\
+\hspace*{2em} x += p; \\
 \}
 }
 \end{minipage}
@@ -748,7 +749,7 @@ for (int i = 0; i < 5; i++) \{ \\
 % (b) Original
 \begin{minipage}{.36\textwidth}
 \texttt{%
-int x; \\
+int x = 100; \\
 \textcolor{blue}{\bfseries \#pragma acc loop seq reduction(+:x)} \\
 for (int i = 0; i < 5; i++) \\
 \hspace*{2em} x = 1;
@@ -765,11 +766,11 @@ for (int i = 0; i < 5; i++) \\
 % (a) Transformed
 \begin{minipage}{.5\textwidth}
 \texttt{%
-int x, sum = 100; \\
+int p, x = 100; \\
 for (int i = 0; i < 5; i++) \{ \\
-\hspace*{2em} \textcolor{blue}{\bfseries int x;} \\
-\hspace*{2em} x = 100; \\
-\hspace*{2em} sum += x; \\
+\hspace*{2em} \textcolor{blue}{\bfseries int p;} \\
+\hspace*{2em} p = 100; \\
+\hspace*{2em} x += p; \\
 \}
 }
 \end{minipage}
@@ -777,14 +778,14 @@ for (int i = 0; i < 5; i++) \{ \\
 % (b) Transformed
 \begin{minipage}{.36\textwidth}
 \texttt{%
-int x; \\
+int x = 100; \\
 \textcolor{blue}{\bfseries int sum = 0;\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ // (1)} \\
 for (int i = 0; i < 5; i++) \{ \\
 \hspace*{2em} \textcolor{blue}{\bfseries int x = 0;\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ // (2)} \\
 \hspace*{2em} x = 1; \\
 \hspace*{2em} \textcolor{blue}{\bfseries sum += x;\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ // (3)} \\
 \} \\
-\textcolor{blue}{\bfseries x = sum;\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ // (4)}
+\textcolor{blue}{\bfseries x += sum;\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ // (4)}
 }
 \end{minipage} \\
 % Labels
@@ -817,12 +818,12 @@ compilers).  This declaration shadows the declaration in the outer scope,
 which gives the intended semantics of the \emph{private} clause.
 
 To illustrate removing a \emph{reduction} clause, consider as a concrete example
-the clause \texttt{reduction(+:x)}.  There are two cases.
+\texttt{reduction(+:x)}.  There are two cases.
 
 \textit{Case~1}.  This is perhaps the most commonly occurring use of the
 \emph{reduction} clause: If the only accesses to \texttt{x} in the loop
 body are in statements of the form \texttt{x++} or \texttt{x\ +=\
-}\emph{expression} (where \texttt{x} is not assigned in \emph{expression}),
+}\emph{expression} (where \texttt{x} does not occur in \emph{expression}),
 then the reduction clause can be removed with no change in semantics.  This is
 the case in Figure~\ref{fig:privred}(a), for example.
 
@@ -833,11 +834,11 @@ illustrated in Figure~\ref{fig:privred}(b).
 (1)~A ``fresh'' variable (\texttt{sum}) is declared to accumulate the result.
 (2)~Since \texttt{x} is the reduction variable, a local variable \texttt{x}
 is declared in the loop body with the same type as the shadowed variable
-\texttt{x}, and it is initialized to the initialization value for a sum
+\texttt{x}, and it is initialized to the initializer value for a sum
 reduction (\texttt{0}).
 (3)~At the end of the loop body, the local \texttt{x} is added to the result
 (\texttt{sum}).
-(4)~After the loop, the accumulated result is stored in the original
+(4)~After the loop, the accumulated result is added to the original
 \texttt{x}.
 
 \subsection{Directive Translation}
